@@ -543,3 +543,100 @@ systemctl reload-or-restart php8.1-fpm
 #Solution MariaDB
 
 apt install mariadb-client mariadb-server php-mysql
+
+confirmation="N"
+
+while [ "$confirmation" != "O" ] && [ "$confirmation" != "o" ]
+do
+    #Saisie des variables
+    echo "Entrez l'utilisateur de la base de données : "
+    read BDD_UTILISATEUR
+
+    echo "Entrez le mot de passe de la base de données : "
+    read BDD_MDP
+
+    echo "Entrez le nom de la base de données : "
+    read BDD_NOM
+
+    # Affichage des variables
+    echo "Vous avez entré les informations suivantes :"
+    echo "- Utilisateur de la base de données : $BDD_UTILISATEUR"
+    echo "- Mot de passe de la base de données : $BDD_MDP"
+    echo "- Nom de la base de données : $BDD_NOM"
+
+    # Confirmation
+    echo "Confirmez-vous que ces informations sont correctes ? (O/N)"
+    read confirmation
+done
+
+mysql -u root -p -e "CREATE USER '$BDD_UTILISATEUR'@'localhost' IDENTIFIED BY '$BDD_MDP';"
+mysql -u root -p -e "CREATE DATABASE $BDD_NOM DEFAULT CHARSET utf8mb4 DEFAULT COLLATE utf8mb4_unicode_ci;"
+mysql -u root -p -e "GRANT ALL PRIVILEGES ON $BDD_NOM.* TO '$BDD_UTILISATEUR'@'localhost';"
+mysql -u root -p -e "FLUSH PRIVILEGES;"
+
+
+#Installation de Nextcloud
+
+confirmation="N"
+
+while [ "$confirmation" != "O" ] && [ "$confirmation" != "o" ]
+do
+    echo "Entrez la version de Nextcloud a installer (FORMAT -> X.X.X) :"
+    read VERSION
+
+    echo "Vous avez saisie la version suivante : $VERSION"
+
+    echo "Confirmez-vous que cette version est la bonne ? (O/N)"
+    read confirmation
+done
+
+wget -p /var/www https://download.nextcloud.com/server/releases/nextcloud-$VERSION.zip
+unzip /var/www/nextcloud-$VERSION.zip -d /var/www/
+
+chown -R www-data:www-data /var/www/nextcloud
+
+
+confirmation="N"
+
+while [ "$confirmation" != "O" ] && [ "$confirmation" != "o" ]
+do
+    echo "Entrez le nom d'utilisateur :"
+    read UTILISATEUR
+
+    echo "Entrez le mot de passe de cet utilisateur :"
+    read MDP
+
+    echo "Vous avez saisi les informations suivantes :"
+    echo "- Utilisateur : $UTILISATEUR"
+    echo "- Mot de passe : $UTILISATEUR_MDP"
+
+    echo "Confirmez-vous que ces informations sont correctes ? (O/N)"
+    read confirmation
+done
+
+mkdir -p /home/$UTILISATEUR/nextcloud/data
+chown -R www-data:www-data /home/$UTILISATEUR/nextcloud/
+chmod 775 /home/$UTILISATEUR
+
+sudo -u www-data php /var/www/nextcloud/occ maintenance:install --database=mysql --database-name=$BDD_NOM --database-user=$BDD_UTILISATEUR --database-pass=$BDD_MDP --admin-user=$UTILISATEUR --admin-pass=$UTILISATEUR_MDP --admin-email=technique@synergy83.fr --data-dir=/home/$UTILISATEUR/nextcloud/data/
+
+
+confirmation="N"
+
+while [ "$confirmation" != "O" ] && [ "$confirmation" != "o" ]
+do
+    echo "Entrez l'adresse IP :"
+    read IP
+
+    echo "Vous avez saisi l'adresse IP suivante : $IP"
+
+    echo "Confirmez-vous que cette adresse IP est correcte ? (O/N)"
+    read confirmation
+done
+
+sudo -u www-data php /var/www/nextcloud/occ config:system:set overwrite.cli.url --value http://$IP
+sudo -u www-data php /var/www/nextcloud/occ config:system:set trusted_domains 1 --value $IP
+
+wget -O /etc/nginx/sites-available/$IP.conf https://raw.githubusercontent.com/nextcloud/documentation/c724e53f74ede5b2f8e58a3590461b11cc48fc6c/admin_manual/installation/nginx-root.conf.sample
+
+ln -s /etc/nginx/sites-available/$IP.conf /$IP.conf
