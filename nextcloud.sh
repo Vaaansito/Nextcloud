@@ -640,3 +640,7 @@ sudo -u www-data php /var/www/nextcloud/occ config:system:set trusted_domains 1 
 wget -O /etc/nginx/sites-available/$IP.conf https://raw.githubusercontent.com/nextcloud/documentation/c724e53f74ede5b2f8e58a3590461b11cc48fc6c/admin_manual/installation/nginx-root.conf.sample
 
 ln -s /etc/nginx/sites-available/$IP.conf /$IP.conf
+
+#Cron
+
+apt install cron
