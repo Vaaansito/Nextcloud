@@ -590,7 +590,7 @@ do
     read confirmation
 done
 
-wget -p /var/www https://download.nextcloud.com/server/releases/nextcloud-$VERSION.zip
+wget -O /var/www/nextcloud https://download.nextcloud.com/server/releases/nextcloud-$VERSION.zip
 unzip /var/www/nextcloud-$VERSION.zip -d /var/www/
 
 chown -R www-data:www-data /var/www/nextcloud
@@ -604,7 +604,7 @@ do
     read UTILISATEUR
 
     echo "Entrez le mot de passe de cet utilisateur :"
-    read MDP
+    read UTILISATEUR_MDP
 
     echo "Vous avez saisi les informations suivantes :"
     echo "- Utilisateur : $UTILISATEUR"
